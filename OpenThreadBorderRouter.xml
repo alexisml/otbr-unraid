@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Container version="2">
-  <Name>OpenThreadBorderRouter-HA</Name>
+  <Name>OpenThreadBorderRouter</Name>
   <Repository>ghcr.io/ownbee/hass-otbr-docker:latest</Repository>
   <Registry>https://github.com/ownbee/hass-otbr-docker</Registry>
   <Network>host</Network>
@@ -10,9 +10,9 @@
   <Support>https://community.home-assistant.io/t/ha-docker-with-otbr-docker/735288</Support>
   <Project>https://openthread.io/guides/border-router</Project>
   <Overview>
-    [b][u]OpenThread Border Router (Home Assistant optimized) for Unraid[/u][/b]&#13;
+    [b][u]OpenThread Border Router for Unraid[/u][/b]&#13;
     &#13;
-    Defaults are configured for [b]LAN / network-based RCP[/b], but this template supports both LAN and USB radios.&#13;
+    Run an OpenThread Border Router directly on Unraid. Defaults are configured for [b]LAN / network-based RCP[/b], but this template supports both LAN and USB radios.&#13;
     &#13;
     [b]Mode selection:[/b]&#13;
     - [b]LAN mode (default):[/b] set [i]NETWORK_DEVICE[/i] to your RCP endpoint (example: 192.168.1.50:6638) and keep DEVICE as /tmp/ttyOTBR.&#13;
@@ -30,11 +30,11 @@
     [/code]&#13;
     3) For USB mode, flash your radio with OpenThread RCP firmware (not multiprotocol).&#13;
     &#13;
-    [b]Home Assistant integration:[/b] use OTBR REST URL http://&lt;UNRAID_IP&gt;:8081&#13;
+    [b]Home Assistant users:[/b] Home Assistant can discover and integrate this OTBR via the OTBR REST URL http://&lt;UNRAID_IP&gt;:8081.&#13;
     &#13;
     [b][span style='color: #E80000;']Important image behavior:[/span][/b]&#13;
     - The image always creates the [i]otbr-ingress-deny-src[/i] ipset on start and tries to destroy it on stop, even when [i]FIREWALL=0[/i]. If the kernel holds a stale reference, the stop/destroy loop can fail and the container crash-loops.&#13;
-    - [i]OTBR_REST_PORT[/i] is hard-coded to 8081 by the upstream image; the value here documents the port Home Assistant uses. [i]OTBR_WEB_PORT[/i] is respected by the image and defaults to 8099 in this template.&#13;
+    - [i]OTBR_REST_PORT[/i] is hard-coded to 8081 by the upstream image; the value here documents the port used by integrations such as Home Assistant. [i]OTBR_WEB_PORT[/i] is respected by the image and defaults to 8099 in this template.&#13;
     - LAN / network-based RCP mode is marked [i]NOT TESTED[/i] upstream. The image startup scripts only reference [i]DEVICE[/i], so [i]NETWORK_DEVICE[/i] may not work as expected. USB mode is the well-tested path.&#13;
     - [i]NAT64=1[/i] installs iptables NAT64/mangle rules. Disable it if you only need pure Thread/IPv6 and want less netfilter churn.&#13;
     &#13;
