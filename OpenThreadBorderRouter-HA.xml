@@ -19,21 +19,33 @@
     - [b]USB mode:[/b] clear NETWORK_DEVICE, map your USB device, and set DEVICE to the internal mapped path (default /dev/ttyUSB0).&#13;
     &#13;
     [b][span style='color: #E80000;']Critical prerequisites:[/span][/b]&#13;
-    1) Enable IPv6 on Unraid host networking.&#13;
+    1) Enable IPv6 on Unraid host networking and on your LAN (UniFi: enable static IPv6 on the Default network, e.g. fda1:1c14:16ac:0001::/64, with SLAAC + IPv6 DNS).&#13;
     2) Enable forwarding sysctls (can be automated via User Scripts):&#13;
     [code]&#13;
+    sysctl -w net.ipv6.conf.all.disable_ipv6=0&#13;
+    sysctl -w net.ipv4.conf.all.forwarding=1&#13;
     sysctl -w net.ipv6.conf.all.forwarding=1&#13;
-    sysctl -w net.ipv6.conf.br0.accept_ra=2&#13;
-    sysctl -w net.ipv6.conf.eth0.accept_ra=2&#13;
+    sysctl -w net.ipv6.conf.all.accept_ra=2&#13;
+    sysctl -w net.ipv6.conf.all.accept_ra_rt_info_max_plen=64&#13;
     [/code]&#13;
     3) For USB mode, flash your radio with OpenThread RCP firmware (not multiprotocol).&#13;
     &#13;
     [b]Home Assistant integration:[/b] use OTBR REST URL http://&lt;UNRAID_IP&gt;:8081&#13;
+    &#13;
+    [b][span style='color: #E80000;']Important image behavior:[/span][/b]&#13;
+    - The image always creates the [i]otbr-ingress-deny-src[/i] ipset on start and tries to destroy it on stop, even when [i]FIREWALL=0[/i]. If the kernel holds a stale reference, the stop/destroy loop can fail and the container crash-loops.&#13;
+    - [i]OTBR_REST_PORT[/i] and [i]OTBR_WEB_PORT[/i] are read by this template for documentation only; the upstream image currently hard-codes REST to 8081 and web to 8080. Use the WebUI link accordingly.&#13;
+    - [i]NAT64=1[/i] installs iptables NAT64/mangle rules. Disable it if you only need pure Thread/IPv6 and want less netfilter churn.&#13;
+    &#13;
+    [b][span style='color: #E80000;']Troubleshooting:[/span][/b]&#13;
+    - If the container crash-loops with ipset errors (e.g. [i]Set cannot be destroyed: it is in use by a kernel component[/i]), set [b]FIREWALL=0[/b] and [b]NAT64=0[/b], stop/remove the container, then destroy the stale set from any privileged host-network container: [code]docker run --rm --net=host --privileged alpine sh -c "apk add --no-cache ipset &amp;&amp; ipset destroy otbr-ingress-deny-src"[/code]&#13;
+    - If REST/Web UI is unreachable, verify the chosen ports are not already in use on the Unraid host.&#13;
+    - For commissioning issues, ensure mDNS and IGMP snooping are enabled on your UniFi network.&#13;
   </Overview>
   <Category>HomeAutomation:Tools:Utilities</Category>
   <WebUI>http://[IP]:[PORT:8099]/</WebUI>
   <Icon>https://raw.githubusercontent.com/ds-sebastian/unraid-templates/main/icons/otbr-icon.png</Icon>
-  <ExtraParams>--cap-add=SYS_ADMIN --cap-add=NET_ADMIN --sysctl net.ipv6.conf.all.disable_ipv6=0 --sysctl net.ipv4.conf.all.forwarding=1 --sysctl net.ipv6.conf.all.forwarding=1</ExtraParams>
+  <ExtraParams>--cap-add=SYS_ADMIN --cap-add=NET_ADMIN --cap-add=NET_RAW --sysctl net.ipv6.conf.all.disable_ipv6=0 --sysctl net.ipv4.conf.all.forwarding=1 --sysctl net.ipv6.conf.all.forwarding=1 --sysctl net.ipv6.conf.all.accept_ra=2 --sysctl net.ipv6.conf.all.accept_ra_rt_info_max_plen=64</ExtraParams>
   <PostArgs/>
   <CPUset/>
   <DateInstalled/>
@@ -50,16 +62,21 @@
   <Config Name="Baudrate" Target="BAUDRATE" Default="460800" Mode="" Description="Serial baudrate for USB RCP radios." Type="Variable" Display="advanced" Required="false" Mask="false">460800</Config>
   <Config Name="Flow Control" Target="FLOW_CONTROL" Default="1" Mode="" Description="Hardware flow control for USB radios (1 enabled, 0 disabled)." Type="Variable" Display="advanced" Required="false" Mask="false">1</Config>
 
-  <Config Name="Backbone Interface" Target="BACKBONE_IF" Default="br0" Mode="" Description="Host network interface used as OTBR backbone (examples: br0, eth0, enp3s0)." Type="Variable" Display="always" Required="true" Mask="false">br0</Config>
-  <Config Name="OTBR WebUI Port" Target="OTBR_WEB_PORT" Default="8099" Mode="" Description="OTBR web interface port (changed from 80 to avoid Unraid conflicts)." Type="Variable" Display="always" Required="true" Mask="false">8099</Config>
-  <Config Name="OTBR REST Port" Target="OTBR_REST_PORT" Default="8081" Mode="" Description="REST API port used by Home Assistant OTBR integration." Type="Variable" Display="always" Required="true" Mask="false">8081</Config>
+  <Config Name="Backbone Interface" Target="BACKBONE_IF" Default="br0" Mode="" Description="Host network interface used as OTBR backbone (examples: br0, eth0, enp3s0). Must match the interface carrying your LAN IPv6 prefix." Type="Variable" Display="always" Required="true" Mask="false">br0</Config>
+  <Config Name="TREL Interface" Target="TREL_IF" Default="" Mode="" Description="Optional dedicated TREL interface. If empty, BACKBONE_IF is used." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="OTBR WebUI Port" Target="OTBR_WEB_PORT" Default="8099" Mode="" Description="OTBR web interface port (changed from 80 to avoid Unraid conflicts). The image ignores custom values and always listens on 8080 internally; this only documents the host port you will use." Type="Variable" Display="always" Required="true" Mask="false">8099</Config>
+  <Config Name="OTBR REST Port" Target="OTBR_REST_PORT" Default="8081" Mode="" Description="REST API port used by Home Assistant OTBR integration. The image ignores custom values and always listens on 8081 internally." Type="Variable" Display="always" Required="true" Mask="false">8081</Config>
+  <Config Name="OTBR Web Interface Bind" Target="OTBR_WEB_INTERFACE" Default="" Mode="" Description="Optional bind address for otbr-web (e.g. 0.0.0.0 or ::). Leave empty to use image default." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="OTBR Web Enable" Target="OTBR_WEB" Default="1" Mode="" Description="Enable the OTBR web UI (1 enabled, 0 disabled)." Type="Variable" Display="advanced" Required="false" Mask="false">1</Config>
 
   <Config Name="Enable NAT64" Target="NAT64" Default="1" Mode="" Description="Enable NAT64 translation for IPv4 access from Thread devices." Type="Variable" Display="advanced" Required="false" Mask="false">1</Config>
-  <Config Name="Enable Firewall" Target="FIREWALL" Default="1" Mode="" Description="Enable OTBR internal firewall." Type="Variable" Display="advanced" Required="false" Mask="false">1</Config>
+  <Config Name="Enable Firewall" Target="FIREWALL" Default="1" Mode="" Description="Enable OTBR internal firewall. Disable only for troubleshooting ipset lockups." Type="Variable" Display="advanced" Required="false" Mask="false">1</Config>
+  <Config Name="Thread 1.4 Beta" Target="THREAD_BETA" Default="0" Mode="" Description="Enable Thread 1.4+ beta binaries (set to 1)." Type="Variable" Display="advanced" Required="false" Mask="false">0</Config>
 
   <Config Name="Data Storage" Target="/data/thread" Default="/mnt/user/appdata/otbr" Mode="rw" Description="Persistent OTBR data storage (datasets/credentials/state)." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/otbr</Config>
   <Config Name="TUN Adapter" Target="/dev/net/tun" Default="/dev/net/tun" Mode="rw" Description="Required for creating wpan/tunnel interfaces." Type="Device" Display="advanced" Required="true" Mask="false">/dev/net/tun</Config>
   <Config Name="Local Time" Target="/etc/localtime" Default="/etc/localtime" Mode="ro" Description="Sync timezone/time from host." Type="Path" Display="advanced" Required="false" Mask="false">/etc/localtime</Config>
+  <Config Name="DBus" Target="/run/dbus" Default="/run/dbus" Mode="ro" Description="Optional host D-Bus socket for mDNS/Avahi integration. Leave empty if not needed." Type="Path" Display="advanced" Required="false" Mask="false"></Config>
 
   <Config Name="Auto-Flash Firmware" Target="AUTOFLASH_FIRMWARE" Default="0" Mode="" Description="Auto-flash firmware (mainly for HA SkyConnect/Yellow scenarios)." Type="Variable" Display="advanced" Required="false" Mask="false">0</Config>
   <Config Name="Log Level" Target="OTBR_LOG_LEVEL" Default="error" Mode="" Description="OTBR log level (debug,info,notice,warning,error,critical,alert,emergency)." Type="Variable" Display="advanced" Required="false" Mask="false">error</Config>
