@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<Repository>
+  <Profile>
+    <Name>alexisml</Name>
+    <Description>Unraid Community Apps templates and metadata for OpenThread Border Router.</Description>
+    <GitHub>https://github.com/alexisml/otbr-unraid</GitHub>
+    <Support>https://github.com/alexisml/otbr-unraid/issues</Support>
+  </Profile>
+</Repository>
