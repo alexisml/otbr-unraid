@@ -43,7 +43,7 @@
     - For commissioning issues, ensure mDNS and IGMP snooping are enabled on your UniFi network.&#13;
   </Overview>
   <Category>HomeAutomation:Tools:Utilities</Category>
-  <WebUI>http://[IP]:[PORT:8099]/</WebUI>
+  <WebUI>http://[IP]:[PORT:8080]/</WebUI>
   <Icon>https://raw.githubusercontent.com/ds-sebastian/unraid-templates/main/icons/otbr-icon.png</Icon>
   <ExtraParams>--cap-add=SYS_ADMIN --cap-add=NET_ADMIN --cap-add=NET_RAW --sysctl net.ipv6.conf.all.disable_ipv6=0 --sysctl net.ipv4.conf.all.forwarding=1 --sysctl net.ipv6.conf.all.forwarding=1 --sysctl net.ipv6.conf.all.accept_ra=2 --sysctl net.ipv6.conf.all.accept_ra_rt_info_max_plen=64</ExtraParams>
   <PostArgs/>
@@ -64,7 +64,7 @@
 
   <Config Name="Backbone Interface" Target="BACKBONE_IF" Default="br0" Mode="" Description="Host network interface used as OTBR backbone (examples: br0, eth0, enp3s0). Must match the interface carrying your LAN IPv6 prefix." Type="Variable" Display="always" Required="true" Mask="false">br0</Config>
   <Config Name="TREL Interface" Target="TREL_IF" Default="" Mode="" Description="Optional dedicated TREL interface. If empty, BACKBONE_IF is used." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
-  <Config Name="OTBR WebUI Port" Target="OTBR_WEB_PORT" Default="8099" Mode="" Description="OTBR web interface port (changed from 80 to avoid Unraid conflicts). The image ignores custom values and always listens on 8080 internally; this only documents the host port you will use." Type="Variable" Display="always" Required="true" Mask="false">8099</Config>
+  <Config Name="OTBR WebUI Port" Target="OTBR_WEB_PORT" Default="8080" Mode="" Description="OTBR web interface port. The upstream image hard-codes otbr-web to 8080, so this value must match." Type="Variable" Display="always" Required="true" Mask="false">8080</Config>
   <Config Name="OTBR REST Port" Target="OTBR_REST_PORT" Default="8081" Mode="" Description="REST API port used by Home Assistant OTBR integration. The image ignores custom values and always listens on 8081 internally." Type="Variable" Display="always" Required="true" Mask="false">8081</Config>
   <Config Name="OTBR Web Interface Bind" Target="OTBR_WEB_INTERFACE" Default="" Mode="" Description="Optional bind address for otbr-web (e.g. 0.0.0.0 or ::). Leave empty to use image default." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
   <Config Name="OTBR Web Enable" Target="OTBR_WEB" Default="1" Mode="" Description="Enable the OTBR web UI (1 enabled, 0 disabled)." Type="Variable" Display="advanced" Required="false" Mask="false">1</Config>
