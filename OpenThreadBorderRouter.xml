@@ -20,14 +20,16 @@
     &#13;
     [b][span style='color: #E80000;']Critical prerequisites:[/span][/b]&#13;
     1) Enable IPv6 on Unraid host networking and on your LAN (UniFi: enable static IPv6 on the Default network, e.g. fda1:1c14:16ac:0001::/64, with SLAAC + IPv6 DNS).&#13;
-    2) Enable forwarding sysctls (can be automated via User Scripts):&#13;
+    2) Enable forwarding sysctls on the Unraid host. Because this template uses host networking, these cannot be set inside the container; apply them with a User Script at array startup:&#13;
     [code]&#13;
+    #!/bin/bash&#13;
     sysctl -w net.ipv6.conf.all.disable_ipv6=0&#13;
-    sysctl -w net.ipv4.conf.all.forwarding=1&#13;
     sysctl -w net.ipv6.conf.all.forwarding=1&#13;
-    sysctl -w net.ipv6.conf.all.accept_ra=2&#13;
-    sysctl -w net.ipv6.conf.all.accept_ra_rt_info_max_plen=64&#13;
+    sysctl -w net.ipv6.conf.br0.accept_ra=2&#13;
+    sysctl -w net.ipv6.conf.eth0.accept_ra=2&#13;
+    sysctl -w net.ipv4.conf.all.forwarding=1&#13;
     [/code]&#13;
+    Adjust interface names (br0/eth0) to match your Unraid host.&#13;
     3) For USB mode, flash your radio with OpenThread RCP firmware (not multiprotocol).&#13;
     &#13;
     [b]Home Assistant users:[/b] Home Assistant can discover and integrate this OTBR via the OTBR REST URL http://&lt;UNRAID_IP&gt;:8081.&#13;
@@ -45,8 +47,8 @@
   </Overview>
   <Category>HomeAutomation:Tools:Utilities</Category>
   <WebUI>http://[IP]:[PORT:8099]/</WebUI>
-  <Icon>https://raw.githubusercontent.com/ds-sebastian/unraid-templates/main/icons/otbr-icon.png</Icon>
-  <ExtraParams>--cap-add=SYS_ADMIN --cap-add=NET_ADMIN --cap-add=NET_RAW --sysctl net.ipv6.conf.all.disable_ipv6=0 --sysctl net.ipv4.conf.all.forwarding=1 --sysctl net.ipv6.conf.all.forwarding=1 --sysctl net.ipv6.conf.all.accept_ra=2 --sysctl net.ipv6.conf.all.accept_ra_rt_info_max_plen=64</ExtraParams>
+  <Icon>https://raw.githubusercontent.com/alexisml/otbr-unraid/main/icons/otbr-icon.png</Icon>
+  <ExtraParams>--cap-add=SYS_ADMIN --cap-add=NET_ADMIN --cap-add=NET_RAW</ExtraParams>
   <PostArgs/>
   <CPUset/>
   <DateInstalled/>
