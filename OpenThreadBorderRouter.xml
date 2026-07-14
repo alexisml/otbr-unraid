@@ -58,7 +58,7 @@
 
   <Config Name="DEVICE" Target="DEVICE" Default="/tmp/ttyOTBR" Mode="" Description="OTBR radio path. For LAN mode keep /tmp/ttyOTBR. For USB mode set to the internal mapped device path (e.g. /dev/ttyUSB0)." Type="Variable" Display="always" Required="true" Mask="false">/tmp/ttyOTBR</Config>
 
-  <Config Name="USB Radio Device (optional passthrough)" Target="/dev/ttyUSB0" Default="" Mode="rw" Description="Optional for USB mode only. Map your physical device (prefer /dev/serial/by-id/...). Leave empty for LAN mode." Type="Device" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="USB Radio Device (optional passthrough)" Target="/dev/ttyUSB0" Default="" Mode="rw" Description="Optional for USB mode only. Map your physical device (prefer /dev/serial/by-id/...). Leave empty for LAN mode." Type="Path" Display="advanced" Required="false" Mask="false"></Config>
 
   <Config Name="Baudrate" Target="BAUDRATE" Default="460800" Mode="" Description="Serial baudrate for USB RCP radios." Type="Variable" Display="advanced" Required="false" Mask="false">460800</Config>
   <Config Name="Flow Control" Target="FLOW_CONTROL" Default="1" Mode="" Description="Hardware flow control for USB radios (1 enabled, 0 disabled)." Type="Variable" Display="advanced" Required="false" Mask="false">1</Config>
