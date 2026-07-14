@@ -16,18 +16,20 @@
     &#13;
     [b]Mode selection:[/b]&#13;
     - [b]LAN mode (default):[/b] set [i]NETWORK_DEVICE[/i] to your RCP endpoint (example: 192.168.1.50:6638) and keep DEVICE as /tmp/ttyOTBR.&#13;
-    - [b]USB mode:[/b] clear NETWORK_DEVICE, map your USB device, and set DEVICE to the internal mapped path (default /dev/ttyUSB0).&#13;
+    - [b]USB mode:[/b] clear NETWORK_DEVICE, add a Device mapping via Unraid UI (e.g. /dev/serial/by-id/your-radio mapped to /dev/ttyUSB0), and set DEVICE to the internal mapped path (default /dev/ttyUSB0).&#13;
     &#13;
     [b][span style='color: #E80000;']Critical prerequisites:[/span][/b]&#13;
     1) Enable IPv6 on Unraid host networking and on your LAN (UniFi: enable static IPv6 on the Default network, e.g. fda1:1c14:16ac:0001::/64, with SLAAC + IPv6 DNS).&#13;
-    2) Enable forwarding sysctls (can be automated via User Scripts):&#13;
+    2) Enable forwarding sysctls on the Unraid host. Because this template uses host networking, these cannot be set inside the container; apply them with a User Script at array startup:&#13;
     [code]&#13;
+    #!/bin/bash&#13;
     sysctl -w net.ipv6.conf.all.disable_ipv6=0&#13;
-    sysctl -w net.ipv4.conf.all.forwarding=1&#13;
     sysctl -w net.ipv6.conf.all.forwarding=1&#13;
-    sysctl -w net.ipv6.conf.all.accept_ra=2&#13;
-    sysctl -w net.ipv6.conf.all.accept_ra_rt_info_max_plen=64&#13;
+    sysctl -w net.ipv6.conf.br0.accept_ra=2&#13;
+    sysctl -w net.ipv6.conf.eth0.accept_ra=2&#13;
+    sysctl -w net.ipv4.conf.all.forwarding=1&#13;
     [/code]&#13;
+    Adjust interface names (br0/eth0) to match your Unraid host.&#13;
     3) For USB mode, flash your radio with OpenThread RCP firmware (not multiprotocol).&#13;
     &#13;
     [b]Home Assistant users:[/b] Home Assistant can discover and integrate this OTBR via the OTBR REST URL http://&lt;UNRAID_IP&gt;:8081.&#13;
@@ -45,8 +47,8 @@
   </Overview>
   <Category>HomeAutomation:Tools:Utilities</Category>
   <WebUI>http://[IP]:[PORT:8099]/</WebUI>
-  <Icon>https://raw.githubusercontent.com/ds-sebastian/unraid-templates/main/icons/otbr-icon.png</Icon>
-  <ExtraParams>--cap-add=SYS_ADMIN --cap-add=NET_ADMIN --cap-add=NET_RAW --sysctl net.ipv6.conf.all.disable_ipv6=0 --sysctl net.ipv4.conf.all.forwarding=1 --sysctl net.ipv6.conf.all.forwarding=1 --sysctl net.ipv6.conf.all.accept_ra=2 --sysctl net.ipv6.conf.all.accept_ra_rt_info_max_plen=64</ExtraParams>
+  <Icon>https://raw.githubusercontent.com/alexisml/otbr-unraid/main/icons/otbr-icon.png</Icon>
+  <ExtraParams>--cap-add=SYS_ADMIN --cap-add=NET_ADMIN --cap-add=NET_RAW</ExtraParams>
   <PostArgs/>
   <CPUset/>
   <DateInstalled/>
@@ -58,7 +60,7 @@
 
   <Config Name="DEVICE" Target="DEVICE" Default="/tmp/ttyOTBR" Mode="" Description="OTBR radio path. For LAN mode keep /tmp/ttyOTBR. For USB mode set to the internal mapped device path (e.g. /dev/ttyUSB0)." Type="Variable" Display="always" Required="true" Mask="false">/tmp/ttyOTBR</Config>
 
-  <Config Name="USB Radio Device (optional passthrough)" Target="/dev/ttyUSB0" Default="" Mode="rw" Description="Optional for USB mode only. Map your physical device (prefer /dev/serial/by-id/...). Leave empty for LAN mode." Type="Device" Display="advanced" Required="false" Mask="false"></Config>
+  <!-- USB mode: manually add a Device mapping via Unraid UI (e.g. /dev/serial/by-id/your-radio -> /dev/ttyUSB0) -->
 
   <Config Name="Baudrate" Target="BAUDRATE" Default="460800" Mode="" Description="Serial baudrate for USB RCP radios." Type="Variable" Display="advanced" Required="false" Mask="false">460800</Config>
   <Config Name="Flow Control" Target="FLOW_CONTROL" Default="1" Mode="" Description="Hardware flow control for USB radios (1 enabled, 0 disabled)." Type="Variable" Display="advanced" Required="false" Mask="false">1</Config>
